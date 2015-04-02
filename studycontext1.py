@@ -135,9 +135,9 @@ def viz_errors(mesh_pts, errors, fignum, scaling=2):
     plt.show()
 
 test30 = test_goal(mesh_pts_test30)
-##viz_errors(mesh_pts_test30, test30.errors, 1)
-##fig1 = plt.figure(1)
-##fig1.savefig('viz_errors1.png')
+viz_errors(mesh_pts_test30, test30.errors, 1)
+fig1 = plt.figure(1)
+fig1.savefig('viz_errors1.png')
 
 """
 studycontext-step:
