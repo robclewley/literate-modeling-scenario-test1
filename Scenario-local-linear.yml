@@ -10,8 +10,8 @@ Given:
  - Euclidean error tolerance of forward trajectories (chosen to be feasible for the given function f)
 
 Goal:
-  - Derive a UAT-satisfying local linear ODE approximation in the domain (where nonlinearity is fairly weak)
+  - Derive a UAC-satisfying local linear ODE approximation in the domain (where nonlinearity is fairly weak)
 
-UAT:
+UAC:
  - Predict all forward trajectories up to given max tolerance of Euclidean error 
 
