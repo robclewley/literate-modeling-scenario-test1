@@ -1,0 +1,17 @@
+scenario-metadata:
+  name: local linear fit
+  difficulty: easy
+  time: short
+  tags: graphical, ODE
+
+Given:
+ - 2D nonlinear vector field given as a black box function of (x,y) -> (fx, fy)
+ - finite, rectangular domain [x0,x1] X [y0,y1]
+ - Euclidean error tolerance of forward trajectories (chosen to be feasible for the given function f)
+
+Goal:
+  - Derive a UAT-satisfying local linear ODE approximation in the domain (where nonlinearity is fairly weak)
+
+UAT:
+ - Predict all forward trajectories up to given max tolerance of Euclidean error 
+
