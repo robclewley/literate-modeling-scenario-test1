@@ -77,10 +77,10 @@ def make_mesh_pts(N=30):
     xsamples = xInterval.uniformSample(xdom_width/N, avoidendpoints=True)
     ysamples = yInterval.uniformSample(ydom_width/N, avoidendpoints=True)
     xmesh, ymesh = np.meshgrid(xsamples,ysamples)
-    return np.dstack((xmesh,ymesh)).reshape(N*N,2)
+    return xmesh, ymesh, np.dstack((xmesh,ymesh)).reshape(N*N,2)
 
-mesh_pts_test5 = make_mesh_pts(5)
-mesh_pts_test30 = make_mesh_pts(30)
+xmesh5, ymesh5, mesh_pts_test5 = make_mesh_pts(5)
+xmesh30, ymesh30, mesh_pts_test30 = make_mesh_pts(30)
 
 """
     - mirror signature of F for linear model
@@ -93,6 +93,7 @@ def LF(pt):
     - L2 metric between vector fields
 """
 def metric(pt):
+    # could usefully vectorize this
     return pp.dist(LF(pt), F(pt))
 
 def condition(m, tol):
@@ -101,22 +102,87 @@ def condition(m, tol):
 """
 studycontext-goal:
   tag: define goal
-  notes: first pass, naive function with no diagnostic feedback about spatial errors
+  notes: functions with richer diagnostic feedback about spatial errors
 """
+def error_pts(mesh_pts):
+    return np.array([metric(pt) for pt in mesh_pts])
+
 def test_goal(mesh_pts, goal_tol=L2_tol):
-    max_err = np.Inf
-    for pt in mesh_pts:
-        err =  metric(pt)
-        if err < max_err:
-            max_err = err
-    return condition(max_err, goal_tol)
+    errors_array = error_pts(mesh_pts)
+    result = condition(np.max(errors_array), goal_tol)
+    return dst.args(result=result,
+                    errors=errors_array)
 
 """
 studycontext-test:
   tag: initial test that goal fails with a small sample
 """
-assert not test_goal(mesh_pts_test5)
+test = test_goal(mesh_pts_test5)
+assert not test.result
 
 
+"""
+studycontext-step:
+  tag: visualize mesh of errors
+  notes:
+    - figure 1
+"""
+def viz_errors(mesh_pts, errors, fignum, scaling=2):
+    fig = plt.figure(fignum)
+    fig.clf()
+    for pt, err in zip(mesh_pts, errors):
+        plt.plot(pt[0], pt[1], 'ko', markersize=scaling*err)
+    plt.show()
+
+test30 = test_goal(mesh_pts_test30)
+##viz_errors(mesh_pts_test30, test30.errors, 1)
+##fig1 = plt.figure(1)
+##fig1.savefig('viz_errors1.png')
+
+"""
+studycontext-step:
+  tag: visualize mesh of linear vectors overlaid with actual vectors
+  notes:
+    - figure 2
+"""
+def get_all_Fs(F, mesh_pts):
+    return np.array([F(pt) for pt in mesh_pts])
+
+# store globally for later convenience
+all_Fs = get_all_Fs(F, mesh_pts_test30)
+all_LFs = get_all_Fs(LF, mesh_pts_test30)
+
+def Fmesh(xmesh, ymesh, F):
+    dxs, dys = np.zeros(xmesh.shape, float), np.zeros(ymesh.shape, float)
+    for xi, x in enumerate(xmesh[0]):
+        for yi, y in enumerate(ymesh.T[0]):
+            dx, dy = F((x,y))
+            # note order of indices
+            dxs[yi,xi] = dx
+            dys[yi,xi] = dy
+    return dxs, dys
+
+Fmeshes5 = Fmesh(xmesh5, ymesh5, F)
+LFmeshes5 = Fmesh(xmesh5, ymesh5, LF)
 
 
+Fmeshes30 = Fmesh(xmesh30, ymesh30, F)
+LFmeshes30 = Fmesh(xmesh30, ymesh30, LF)
+
+def viz_VF(Fmeshes, meshes, fignum, col):
+    plt.figure(fignum)
+    Fxmesh, Fymesh = Fmeshes
+    xmesh, ymesh = meshes
+    plt.quiver(xmesh, ymesh, Fxmesh, Fymesh, angles='xy', pivot='middle',
+               scale=10, lw=0.5, width=0.005*max(xdom_width,ydom_width),
+               minshaft=2, minlength=0.1,
+               units='inches', color=col)
+
+# test case
+viz_VF(Fmeshes5, (xmesh5, ymesh5), 2, 'r')
+viz_VF(LFmeshes5, (xmesh5, ymesh5), 2, 'k')
+
+#viz_VF(Fmeshes30, (xmesh30, ymesh30), 2, 'r')
+
+fig2 = plt.figure(2)
+fig2.savefig('viz_VF_overlay1.png')
