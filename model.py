@@ -21,11 +21,11 @@ L2_tol = setup['error_tol']
 pars = setup['pars']
 # target_dom = {'x': [-2.5, 2.5], 'y': [-2, 2]}
 target_dom = setup['target_dom']
-xInterval = Interval('xdom', float, target_dom['x'])
-yInterval = Interval('ydom', float, target_dom['y'])
 # Convenience variables
 xdom = target_dom['x']
 ydom = target_dom['y']
+xInterval = Interval('xdom', float, xdom, abseps=1e-3)
+yInterval = Interval('ydom', float, ydom, abseps=1e-3)
 
 
 def build():
