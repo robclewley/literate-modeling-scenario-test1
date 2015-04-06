@@ -4,15 +4,19 @@ and save a black box object
 """
 from PyDSTool import *
 from PyDSTool.Toolbox import phaseplane as pp
-import sys
+import sys, os
+
+from cacher import cache_it
 
 # public exports
 __all__ = ['F', 'target_dom', 'compute', 'L2_tol']
 
 # ----
 
+this_path = os.path.dirname(os.path.abspath(__file__))
+
 import yaml
-with open('setup.yml') as f:
+with open(os.path.join(this_path,'setup.yml')) as f:
     setup = yaml.load(f)
 
 L2_tol = setup['error_tol']
@@ -21,31 +25,32 @@ L2_tol = setup['error_tol']
 pars = setup['pars']
 # target_dom = {'x': [-2.5, 2.5], 'y': [-2, 2]}
 target_dom = setup['target_dom']
+
 # Convenience variables
 xdom = target_dom['x']
 ydom = target_dom['y']
 xInterval = Interval('xdom', float, xdom, abseps=1e-3)
 yInterval = Interval('ydom', float, ydom, abseps=1e-3)
 
+compatGens = findGenSubClasses('ODEsystem')
 
+class ODEComponent(LeafComponent):
+    compatibleGens=compatGens
+    targetLangs=targetLangs
+
+@cache_it
 def build():
     icdict = {'x': pars['a'],
               'y': pars['a'] - pars['a']**3/3}
     xstr = '(y - (x*x*x/3 - x))/eps'
     ystr = 'a - x'
 
+    # This Jacobian will be built automatically
     #DSargs.fnspecs = {'Jacobian': (['t','x','y'],
     #                               """[[(1-x*x)/eps, 1/eps ],
     #                                    [    -1,        0   ]]""")}
 
     algparams = {'max_pts': 3000, 'init_step': 0.01, 'stiff': True}
-
-    compatGens = findGenSubClasses('ODEsystem')
-
-    class ODEComponent(LeafComponent):
-        compatibleGens=compatGens
-        targetLangs=targetLangs
-    #    compatibleSubcomponents=(sys,)
 
     vdpC = ODEComponent('vdp_gen')
     vdpC.add([Var(xstr, 'x', domain=target_dom['x'], specType='RHSfuncSpec'),
@@ -71,12 +76,13 @@ def build():
     # withJac option for automatic calc of Jacobian
     return MC.getModel()
 
-try:
-    vdp = loadObjects('model.sav')[0]
-except:
-    vdp = build()
-    saveObjects(vdp, 'model.sav')
+vdp = build()
+# re-set params in case they changed in setup.yml
+# since cached build of model object
+vdp.set(pars=pars)
 
+# Note: if domain changed, this is currently hard-wired into
+# event definitions and not updateable without rebuilding cache
 
 def F(xarray):
     x, y = xarray

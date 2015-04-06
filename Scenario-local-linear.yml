@@ -3,15 +3,15 @@ scenario-metadata:
   difficulty: easy
   time: short
   tags: graphical, ODE
-
+ 
 Given:
  - 2D, weakly nonlinear, determininstic vector field given as a black box function of (x,y) -> (f_x(x,y), f_y(x,y))
  - finite, rectangular domain [x0,x1] X [y0,y1]
  - Euclidean error tolerance of forward trajectories (chosen to be feasible for the given function f, unless task scenario is open to being proven inconsistent)
-
+ 
 Goal:
   - Derive a UAC-satisfying local linear ODE approximation in the domain (where nonlinearity is fairly weak)
-
+ 
 UAC:
  - Predict all forward trajectories up to given max tolerance of Euclidean error 
-
+ 
