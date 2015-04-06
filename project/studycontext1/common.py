@@ -6,13 +6,13 @@ import PyDSTool as dst
 from PyDSTool.Toolbox import phaseplane as pp
 import numpy as np
 
-from gist.cacher import cache_it
+from project.cacher import cache_it
 
 """
 givens
 """
-import gist
-from gist.model import F, target_dom, compute, L2_tol
+import project
+from project.model import F, target_dom, compute, L2_tol
 
 """
 reusable convenience definitions
