@@ -102,12 +102,12 @@ def compute(xarray, trajname='test'):
     return pts
 
 def sanity_check():
-    print target_dom
+    print(target_dom)
     x1 = sum(xdom)/2
     y1 = sum(ydom)/2
-    print F((x1,y1))
+    print(F((x1,y1)))
     pts = compute((x1,y1), 'test')
-    print len(pts)
+    print(len(pts))
     plt.plot(pts['x'], pts['y'], 'k-o')
 
 if __name__ == '__main__':

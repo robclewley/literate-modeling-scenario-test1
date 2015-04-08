@@ -4,9 +4,11 @@ header
 from __future__ import absolute_import
 import PyDSTool as dst
 from PyDSTool.Toolbox import phaseplane as pp
+from matplotlib import pyplot as plt
+
 import numpy as np
 
-from project.cacher import cache_it
+from project.cacher import cache_it, can_cache
 
 """
 givens
@@ -43,17 +45,18 @@ def display_traj(traj, fignum, style=None):
 # Convenience function for orientation of new users
 # (not explicit part of study context)
 def demo_sim():
-    print target_dom
-    print F((xdom_half,ydom_half))
+    print(target_dom)
+    print(F((xdom_half,ydom_half)))
     pts = compute((xdom_half,ydom_half), 'test')
-    print len(pts)
+    print(len(pts))
     plt.plot(pts['x'], pts['y'])
     plt.show()
 
 @cache_it
 def build_lin():
     # make local linear system spec
-    print("I'm not building this twice!")
+    if can_cache:
+        print("I'm not building this model twice!")
     DSargs = dst.args(name='lin')
     xfn_str = '(x0+yfx*y - x)/taux'
     yfn_str = '(y0+xfy*x - y)/tauy'
@@ -69,8 +72,8 @@ def build_lin():
     DSargs.tdata = [0, 10]
     DSargs.ics = {'x': xdom_half*1.1, 'y': ydom_half*1.1}
     DSargs.fnspecs = {'Jacobian': (['t', 'x', 'y'],
-                                   """[[-1/taux, -yfx/taux],
-                                       [-xfy/tauy, -1/tauy]]""")}
+                                   """[[-1/taux, yfx/taux],
+                                       [xfy/tauy, -1/tauy]]""")}
     return dst.embed(dst.Generator.Vode_ODEsystem(DSargs))
 
 lin = build_lin()
@@ -94,7 +97,8 @@ def condition(m, tol):
 # mesh-related
 @cache_it
 def make_mesh_pts(N=30):
-    print "I'm not making these twice!"
+    if can_cache:
+        print("I'm not making this mesh with N ={0:3d} twice!".format(N))
     xsamples = xInterval.uniformSample(xdom_width/N, avoidendpoints=True)
     ysamples = yInterval.uniformSample(ydom_width/N, avoidendpoints=True)
     xmesh, ymesh = np.meshgrid(xsamples,ysamples)
@@ -116,7 +120,7 @@ def Fmesh(xmesh, ymesh, F):
     """
     return x, y mesh pair of vector field values for a v.f. function 'F'
     """
-    dxs, dys = np.zeros(xmesh.shape, float), np.zeros(ymesh.shape, float)
+    dxs, dys = np.zeros(xmesh.shape), np.zeros(ymesh.shape)
     for xi, x in enumerate(xmesh[0]):
         for yi, y in enumerate(ymesh.T[0]):
             dx, dy = F((x,y))
@@ -125,13 +129,12 @@ def Fmesh(xmesh, ymesh, F):
             dys[yi,xi] = dy
     return dxs, dys
 
-
 Fmeshes5 = Fmesh(xmesh5, ymesh5, F)
-LFmeshes5 = Fmesh(xmesh5, ymesh5, LF)
-
 Fmeshes30 = Fmesh(xmesh30, ymesh30, F)
-LFmeshes30 = Fmesh(xmesh30, ymesh30, LF)
 
+# initial value for unoptimized lin
+LFmeshes5 = Fmesh(xmesh5, ymesh5, LF)
+LFmeshes30 = Fmesh(xmesh30, ymesh30, LF)
 
 # test-related
 def error_pts(mesh_pts):
@@ -139,6 +142,25 @@ def error_pts(mesh_pts):
 
 def test_goal(mesh_pts, goal_tol=L2_tol):
     errors_array = error_pts(mesh_pts)
-    result = condition(np.max(errors_array), goal_tol)
+    max_error = np.max(errors_array)
+    result = condition(max_error, goal_tol)
     return dst.args(result=result,
-                    errors=errors_array)
+                    errors=errors_array,
+                    max_error=max_error)
+
+
+# visualization
+def viz_errors(mesh_pts, errors, fignum, scaling=2):
+    fig = plt.figure(fignum)
+    fig.clf()
+    for pt, err in zip(mesh_pts, errors):
+        plt.plot(pt[0], pt[1], 'ko', markersize=scaling*err)
+
+def viz_VF(Fmeshes, meshes, fignum, col):
+    plt.figure(fignum)
+    Fxmesh, Fymesh = Fmeshes
+    xmesh, ymesh = meshes
+    plt.quiver(xmesh, ymesh, Fxmesh, Fymesh, angles='xy', pivot='middle',
+               scale=10, lw=0.5, width=0.005*max(xdom_width,ydom_width),
+               minshaft=2, minlength=0.1,
+               units='inches', color=col)

@@ -17,34 +17,25 @@ checking whether a cache item has expired and knowledge of
 the appropriate key to delete for the object to be
 rebuilt and recached.
 """
-__all__ = ['cache_it', 'exist_in_cache']
+import inspect
+
+__all__ = ['cache_it', 'can_cache']
 
 
 def dummy_cache(x):
     return x
-
-# Doesn't quite help solve the 'need to cache refresh'
-# problem. Only knows about existing objects!
-def exist(obj):
-    """
-    Check if object o is different to cached version
-    """
-    key = pyfscache.make_digest(obj)
-    return key in cache_it.get_names()
-
-def dummy_exist(obj):
-    raise NotImplementedError()
 
 global cache_it
 
 try:
     import pyfscache
 except ImportError:
+    can_cache = False
     cache_it = dummy_cache
-    exist_in_cache = dummy_exist
 else:
+    can_cache = True
     import os
     if not os.path.isdir('./.cache'):
         os.mkdir('./.cache')
     cache_it = pyfscache.FSCache('./.cache')
-    exist_in_cache = exist
+    cache_it._suppress_set_cache_error = True
