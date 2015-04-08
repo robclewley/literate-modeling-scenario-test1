@@ -21,6 +21,8 @@ studycontext-step-diagnostic:
   tag: Check quality of results
 """
 viz_errors(mesh_pts_test30, test30.errors, 1)
+fig1 = plt.figure(1)
+fig1.savefig('viz_errors2.png')
 
 # LFmesh was cached, so must refresh
 cache_it.expire_by_object(LFmeshes5)
@@ -29,9 +31,8 @@ LFmeshes5 = Fmesh(xmesh5, ymesh5, LF)
 viz_VF(LFmeshes5, (xmesh5, ymesh5), 2, 'k')
 viz_VF(Fmeshes5, (xmesh5, ymesh5), 2, 'r')
 
-# L2_tol was far too ambitiously set!
-# As stated, we can conclude that the goal is
-# unfeasible.
+fig2 = plt.figure(2)
+fig2.savefig('viz_VF_overlay2.png')
 
 """
 studycontext-footer:

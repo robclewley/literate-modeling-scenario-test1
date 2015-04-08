@@ -91,3 +91,7 @@ print("Max error on 30 x 30 mesh = {0:3f}".format(test30.max_error))
 
 # store for diagnostic script
 cache_it['test30'] = test30
+
+# L2_tol was far too ambitiously set!
+# As stated, we can conclude that the goal is
+# unfeasible.

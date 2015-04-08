@@ -72,9 +72,6 @@ xmesh_big, ymesh_big = np.meshgrid(xs_big, ys_big)
 LFmeshes_big = Fmesh(xmesh_big, ymesh_big, LF)
 viz_VF(LFmeshes_big, (xmesh_big, ymesh_big), 1, 'k')
 
-fig1 = plt.figure(1)
-fig1.savefig('viz_VF_overlay2.png')
-
 """
 studycontext-footer:
   tag: MPL display
